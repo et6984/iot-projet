@@ -39,7 +39,7 @@ void setup() {
   }
 
   WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP("wifi-lilo-P", "baggio45rabelais17fgc2111");
+  WiFiMulti.addAP("labo_snir", "snbaggio123");
 }
 
 void loop() {
@@ -54,8 +54,12 @@ void loop() {
 
     HTTPClient http;
 
+    url = "http://192.168.112.107/iot-projet/php/data_test.php?temp=" + String(t) + "&humi=" + String(h);
+
+    url = String(url);
+
     Serial.print("[HTTP] begin...\n");
-    if (http.begin(client, "http://192.168.1.188/dht11_projet/test_data.php")) {  // HTTP
+    if (http.begin(client, url)) {  // HTTP
 
 
       Serial.print("[HTTP] GET...\n");
@@ -65,7 +69,7 @@ void loop() {
       // httpCode will be negative on error
       if (httpCode > 0) {
         // HTTP header has been send and Server response header has been handled
-        Serial.printf("[HTTP] GET... code: %d\n", httpCode);
+        Serial.printf("[HTTP] GET ....\n", t, h);
 
         // file found at server
         if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {

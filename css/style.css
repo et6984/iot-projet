@@ -21,7 +21,7 @@ header h1 {
     padding: 10px 20px;
 }
 
-main {
+#affichage {
     display: flex;
     flex-direction: row;
     justify-content: center;
@@ -37,8 +37,51 @@ main {
     align-items: center;
     margin: 0 20px;
     padding: 5px;
-    width: 100vh;
     height: 80vh;
     box-shadow: 0 0 10px white;
     border-radius: 10px;
+}
+
+#div-valeur {
+    width: 60vh;
+}
+
+#div-graphique {
+    width: 140vh;
+}
+
+#connexion, #inscription {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+}
+
+.info {
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+}
+
+.name {
+    margin: 2px auto;
+    border-radius: 2.5px;
+    width: 50%;
+    height: 5%;
+}
+
+.changement {
+    margin: 2px auto;
+    border-radius: 2.5px;
+    width: 25%;
+    height: 5%;
+}
+
+#bouton {
+    margin: auto 5px;
+    width: 10%;
+    height: 70%;
+    border-radius: 5px;
 }
