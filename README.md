@@ -1,5 +1,5 @@
-NOM : DEHONDT
-Prénom : Gabin
+NOM : DEHONDT / ESSAN
+Prénom : Gabin / Ange
 Classe : B1 CIEL IR
 
 <h2 style="texte-align:center">Mise en œuvre du MQTT avec un ESP8266</h2>
@@ -59,3 +59,22 @@ Pour résoudre se problème on utilisera un DHT11 et un ESP8266, tout cela en co
 
 <img src="image/affichage_nodered_dht11.png">
 <img src="image/nodeRed-configuration.png">
+
+**10. Mise en place d'une interface web pour remplacer Node-Red**
+
+- Inscription :
+    <img src="image/page_inscrption.png" width="80%">
+    - Création d'un utilisateur avec nom, prénom, mot de passe hasher en argon2.
+    <br>
+
+- Connexion : 
+    <img src="image/page_connexion.png" width="80%">
+    - Identification de l'utilisateur par la vérification du mot de passe, et recupération du nom ainsi que la première lettre du prénom pour afficher sur l'interface.
+    <br>
+
+- Interface : 
+    <img src="image/page_interface.png" width="80%">
+    - Affichage des données en direct de la température et l'humidité envoyé par l'ESP8266 à la base de donnée et recupérer par le PHP sur l'interface.
+    - Affichage des données sur l'ensemble de l'année par la moyenne de chaque mois de l'année choix.
+    <br>
+

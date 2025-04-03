@@ -23,6 +23,10 @@ DHT dht(DHTPIN, DHTTYPE); //déclaration du capteur
 
 ESP8266WiFiMulti WiFiMulti;
 
+String server = "http://172.20.10.4";
+
+String dossier = "/iot-projet/php/data_test.php";
+
 void setup() {
 
   Serial.begin(115200);
@@ -39,7 +43,7 @@ void setup() {
   }
 
   WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP("labo_snir", "snbaggio123");
+  WiFiMulti.addAP("ET", "Funipops/051122");
 }
 
 void loop() {
@@ -47,6 +51,13 @@ void loop() {
   float h = dht.readHumidity();//on lit l'hygrometrie
   float t = dht.readTemperature();//on lit la temperature en celsius (par defaut)
   
+  String valeur = "?temp=" + String(t) + "&humi=" + String(h);
+
+  Serial.print("temp : ");
+  Serial.println(t);
+  Serial.print("humi : ");
+  Serial.println(h);
+
   // wait for WiFi connection
   if ((WiFiMulti.run() == WL_CONNECTED)) {
 
@@ -54,17 +65,16 @@ void loop() {
 
     HTTPClient http;
 
-    url = "http://192.168.112.107/iot-projet/php/data_test.php?temp=" + String(t) + "&humi=" + String(h);
-
-    url = String(url);
+    String url = server + dossier + valeur;
 
     Serial.print("[HTTP] begin...\n");
     if (http.begin(client, url)) {  // HTTP
 
-
       Serial.print("[HTTP] GET...\n");
       // start connection and send HTTP header
       int httpCode = http.GET();
+
+      Serial.println(httpCode);
 
       // httpCode will be negative on error
       if (httpCode > 0) {
@@ -72,7 +82,7 @@ void loop() {
         Serial.printf("[HTTP] GET ....\n", t, h);
 
         // file found at server
-        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+        if (httpCode == HTTP_CODE_OK) {
           String payload = http.getString();
           Serial.println(payload);
         }

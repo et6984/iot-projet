@@ -43,11 +43,23 @@ header h1 {
 }
 
 #div-valeur {
-    width: 60vh;
+    width: 50vh;
 }
 
 #div-graphique {
-    width: 140vh;
+    width: 150vh;
+}
+
+.choix-graphique {
+    border-radius: 5px;
+    width: 10vw;
+    margin: 2vh; 
+}
+
+.choix-valeur {
+    border-radius: 5px;
+    width: 5vw;
+    margin: 2vh;
 }
 
 #connexion, #inscription {

@@ -58,7 +58,7 @@
                 } else {
                     echo "<p class='erreur'>Nom d'utilisateur ou mot de passe incorrect</p>";
                 }
-            }  
+            }
             ?>
         </div>
     </form>
