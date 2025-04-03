@@ -1,100 +1,95 @@
-/**
-   BasicHTTPClient.ino
-
-    Created on: 24.05.2015
-
-*/
-
-#include <Arduino.h>
-
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
-
 #include <ESP8266HTTPClient.h>
-
-#include <WiFiClient.h>
-
 #include "DHT.h"
 
-/************ Global State (you don't need to change this!) ******************/
-#define DHTTYPE DHT11   // DHT 11
-#define DHTPIN D6       // broche ou l'on a branche le capteur
-DHT dht(DHTPIN, DHTTYPE); //déclaration du capteur
+/************ Définition des constantes ******************/
+#define DHTTYPE DHT11   // Type du capteur DHT
+#define DHTPIN D6       // Broche de connexion du capteur
 
-ESP8266WiFiMulti WiFiMulti;
+DHT dht(DHTPIN, DHTTYPE); // Déclaration du capteur
 
-String server = "http://172.20.10.4";
+// Identifiants WiFi
+#ifndef STASSID
+#define STASSID "ET"
+#define STAPSK "Funipops/051122"
+#endif
 
-String dossier = "/iot-projet/php/data_test.php";
+// Adresse du serveur et fichier PHP
+String HOST_NAME = "http://172.20.10.4:80"; // Adresse IP de ton serveur
+String PHP_FILE_NAME = "/iot-projet/php/data_test.php"; // Nom du fichier PHP
 
 void setup() {
-
   Serial.begin(115200);
-  // Serial.setDebugOutput(true);
+  Serial.println("\n\nDémarrage de l'ESP8266...");
 
-  Serial.println();
-  Serial.println();
-  Serial.println();
-
-  for (uint8_t t = 4; t > 0; t--) {
-    Serial.printf("[SETUP] WAIT %d...\n", t);
-    Serial.flush();
-    delay(1000);
+  // Initialisation du capteur DHT
+  dht.begin();
+  
+  // Connexion au WiFi
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(STASSID, STAPSK);
+  
+  Serial.print("Connexion au WiFi...");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
   }
 
-  WiFi.mode(WIFI_STA);
-  WiFiMulti.addAP("ET", "Funipops/051122");
+  Serial.println("\nConnecté !");
+  Serial.print("Adresse IP : ");
+  Serial.println(WiFi.localIP());
 }
 
 void loop() {
+  // Lecture des données du capteur
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
 
-  float h = dht.readHumidity();//on lit l'hygrometrie
-  float t = dht.readTemperature();//on lit la temperature en celsius (par defaut)
-  
-  String valeur = "?temp=" + String(t) + "&humi=" + String(h);
+  // Vérification si la lecture est valide
+  if (isnan(temperature) || isnan(humidity)) {
+    Serial.println("Échec de lecture du capteur DHT !");
+  } else {
+    Serial.print("Température : ");
+    Serial.print(temperature);
+    Serial.println("°C");
 
-  Serial.print("temp : ");
-  Serial.println(t);
-  Serial.print("humi : ");
-  Serial.println(h);
+    Serial.print("Humidité : ");
+    Serial.print(humidity);
+    Serial.println("%");
 
-  // wait for WiFi connection
-  if ((WiFiMulti.run() == WL_CONNECTED)) {
-
+    // Création de l'URL avec les valeurs de température et d'humidité
+    String valeur = "?temp=" + String(temperature) + "&humi=" + String(humidity); 
+    String server = HOST_NAME + PHP_FILE_NAME + valeur;
+    
+    Serial.print("Envoi des données à : ");
+    Serial.println(server);
+    
+    // Création de la connexion HTTP
     WiFiClient client;
-
     HTTPClient http;
+    
+    http.begin(client, server);  // Début de la requête HTTP
+    http.setTimeout(5000); // Timeout de 5 secondes
 
-    String url = server + dossier + valeur;
+    // Envoi de la requête GET
+    int httpCode = http.GET();
+    Serial.print("Code HTTP : ");
+    Serial.println(httpCode);
 
-    Serial.print("[HTTP] begin...\n");
-    if (http.begin(client, url)) {  // HTTP
-
-      Serial.print("[HTTP] GET...\n");
-      // start connection and send HTTP header
-      int httpCode = http.GET();
-
-      Serial.println(httpCode);
-
-      // httpCode will be negative on error
-      if (httpCode > 0) {
-        // HTTP header has been send and Server response header has been handled
-        Serial.printf("[HTTP] GET ....\n", t, h);
-
-        // file found at server
-        if (httpCode == HTTP_CODE_OK) {
-          String payload = http.getString();
-          Serial.println(payload);
-        }
+    // Vérification de la réponse du serveur
+    if (httpCode > 0) {
+      if (httpCode == HTTP_CODE_OK) {
+        String payload = http.getString();
+        Serial.println("Réponse du serveur : " + payload);
       } else {
-        Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
+        Serial.printf("Erreur HTTP GET, code : %d\n", httpCode);
       }
-
-      http.end();
     } else {
-      Serial.println("[HTTP] Unable to connect");
+      Serial.printf("Échec de la requête HTTP, erreur : %s\n", http.errorToString(httpCode).c_str());
     }
+
+    http.end(); // Fermeture de la connexion HTTP
   }
 
-  delay(30000);
+  delay(20000);  // Délai entre chaque envoi de données (20 secondes)
 }
