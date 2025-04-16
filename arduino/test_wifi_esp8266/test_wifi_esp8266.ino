@@ -4,8 +4,8 @@
  
 #include <ESP8266WiFi.h>
  
-const char* ssid     = "ET";
-const char* password = "Funipops/051122";
+const char* ssid     = "SFR_377F";
+const char* password = "Ccblg1995";
  
 const char* host = "wifitest.adafruit.com";
  

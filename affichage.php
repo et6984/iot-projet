@@ -10,27 +10,47 @@
 </head> 
 <body>
     <?php
+    date_default_timezone_set('Europe/Paris');
     $mois = ['01','02','03','04','05','06','07','08','09','10','11','12'];
-    $jour = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'];
-    $heure = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24'];
+    $nb_mois = count($mois);
 
-    if (isset($_POST['mois']) && !empty($_POST['annee_choix']) && empty($_POST['mois_choix']) && empty($_POST['jour_choix'])) {
-        $anne_actuel = $_POST['anne_choix'];
-        $mois_actuel = date('m');
-        $jour_actuel = date('d');
-        echo gettype($anne_actuel);
-    } elseif (isset($_POST['jour']) && !empty($_POST['annee_choix']) && !empty($_POST['mois_choix']) && empty($_POST['jour_choix'])) {
-        $anne_actuel = $_POST['anne_choix'];
-        $mois_actuel = $_POST['mois_choix'];
-        $jour_actuel = date('d');
-    } elseif (isset($_POST['heure']) && !empty($_POST['annee_choix']) && !empty($_POST['mois_choix']) && !empty($_POST['jour_choix'])) {
-        $anne_actuel = $_POST['anne_choix'];
-        $mois_actuel = $_POST['mois_choix'];
-        $jour_actuel = $_POST['jour_choix'];
-    } else {    
-        $anne_actuel = date('y');
-        $mois_actuel = date('m');
-        $jour_actuel = date('d'); 
+    if (isset($_POST['mois']) && !empty($_POST['anne_choix']) && empty($_POST['mois_choix']) && empty($_POST['jour_choix'])) {
+        $_SESSION['anne_actuel'] = $_POST['anne_choix'];
+        $_SESSION['mois_actuel'] = date('m');
+        $_SESSION['jour_actuel'] = date('d');
+    } elseif (isset($_POST['jour']) && !empty($_POST['anne_choix']) && !empty($_POST['mois_choix'])) {
+        $_SESSION['anne_actuel'] = $_POST['anne_choix'];
+        $_SESSION['mois_actuel'] = $_POST['mois_choix'];
+        $_SESSION['jour_actuel'] = date('d');
+
+    } elseif (isset($_POST['jour']) && empty($_POST['anne_choix']) && !empty($_POST['mois_choix'])) {
+        $_SESSION['anne_actuel'] = date('y');
+        $_SESSION['mois_actuel'] = $_POST['mois_choix'];
+        $_SESSION['jour_actuel'] = date('d');
+    }else {    
+        $_SESSION['anne_actuel'] = date('y');
+        $_SESSION['mois_actuel'] = date('m');
+        $_SESSION['jour_actuel'] = date('d'); 
+    }
+
+    $jour_actuel = $_SESSION['jour_actuel'];
+    $mois_actuel = $_SESSION['mois_actuel'];
+    $anne_actuel = $_SESSION['anne_actuel'];
+
+    if ($_SESSION['mois_actuel'] == '1' || $_SESSION['mois_actuel'] == '3' || $_SESSION['mois_actuel'] == '5' || $_SESSION['mois_actuel'] == '7' || $_SESSION['mois_actuel'] == '8' || $_SESSION['mois_actuel'] == '10' || $_SESSION['mois_actuel'] == '12') {
+        $nb_jour = 31;
+        $jour = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'];
+    } elseif ($_SESSION['mois_actuel'] == '4' || $_SESSION['mois_actuel'] == '6' || $_SESSION['mois_actuel'] == '9' || $_SESSION['mois_actuel'] == '11') {
+        $nb_jour = 30;
+        $jour = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30'];
+    } else {
+        if ($_SESSION['anne_actuel'] % 4 == 0 && ($_SESSION['anne_actuel'] % 100 != 0 || $_SESSION['anne_actuel'] % 400 == 0)) {
+            $nb_jour = 29;
+            $jour = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29'];
+        } else {
+            $nb_jour = 28;
+            $jour = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28'];
+        }
     }
 
     $host = "localhost";
@@ -42,58 +62,83 @@
         $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-        $temperature = $pdo->prepare("SELECT MESURE FROM capteur C JOIN type_capteur TC ON C.TYPE_CAPTEUR=TC.TYPE_CAPTEUR WHERE TC.TYPE_CAPTEUR='T' ORDER BY CAPTEUR_DATE_HEURE DESC LIMIT 1;");
-        $humidite = $pdo->prepare("SELECT MESURE FROM capteur C JOIN type_capteur TC ON C.TYPE_CAPTEUR=TC.TYPE_CAPTEUR WHERE TC.TYPE_CAPTEUR='H' ORDER BY CAPTEUR_DATE_HEURE DESC LIMIT 1;");
-
-        $temperature->execute();
-        $humidite->execute();
-
-        $temp = $temperature->fetchColumn();
-        $humi = $humidite->fetchColumn();
-
-        if (isset($_POST['heure'])) {
-            for ($i = 0; $i < count($heure); $i++) {
-                $graphique_temp = $pdo->prepare("SELECT donne FROM historique_donne H JOIN type_capteur TC ON H.TYPE_CAPTEUR=TC.TYPE_CAPTEUR WHERE TC.TYPE_CAPTEUR='T' && heure=$heure[$i] && jour=$jour_actuel && mois=$mois_actuel && annee=$anne_actuel;");
-                $graphique_humi = $pdo->prepare("SELECT donne FROM historique_donne H JOIN type_capteur TC ON H.TYPE_CAPTEUR=TC.TYPE_CAPTEUR WHERE TC.TYPE_CAPTEUR='H' && heure=$heure[$i] && jour=$jour_actuel && mois=$mois_actuel && annee=$anne_actuel;");
-                $graphique_temp->execute();
-                $graphique_humi->execute();
+        // Température et humidité actuelles
+        $reqTemp = $pdo->prepare("
+            SELECT MESURE 
+            FROM capteur C 
+            JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+            WHERE TC.TYPE_CAPTEUR = 'T' 
+            ORDER BY ID_CAPTEUR DESC 
+            LIMIT 1;
+        ");
+        $reqHumi = $pdo->prepare("
+            SELECT MESURE 
+            FROM capteur C 
+            JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+            WHERE TC.TYPE_CAPTEUR = 'H' 
+            ORDER BY ID_CAPTEUR DESC 
+            LIMIT 1;
+        ");
     
-                $graphi_temp = $graphique_temp->fetch();
-                $graphi_humi = $graphique_humi->fetch();
+        $reqTemp->execute();
+        $reqHumi->execute();
     
-                $list_graphi_temp[] = $graphi_temp[0];
-                $list_graphi_humi[] = $graphi_humi[0];
-            }
-        } elseif (isset($_POST['jour'])) {
-            for ($i = 0; $i < count($jour); $i++) {
-                $graphique_temp = $pdo->prepare("SELECT donne FROM historique_donne H JOIN type_capteur TC ON H.TYPE_CAPTEUR=TC.TYPE_CAPTEUR WHERE TC.TYPE_CAPTEUR='T' && jour=$jour[i] && mois=$mois_actuel && annee=$anne_actuel;");
-                $graphique_humi = $pdo->prepare("SELECT donne FROM historique_donne H JOIN type_capteur TC ON H.TYPE_CAPTEUR=TC.TYPE_CAPTEUR WHERE TC.TYPE_CAPTEUR='H' && jour=$jour[i] && mois=$mois_actuel && annee=$anne_actuel;");
-                $graphique_temp->execute();
-                $graphique_humi->execute();
+        $temp = $reqTemp->fetchColumn() ?? 0;
+        $humi = $reqHumi->fetchColumn() ?? 0;
     
-                $graphi_temp = $graphique_temp->fetch();
-                $graphi_humi = $graphique_humi->fetch();
+        if (isset($_POST['jour'])) {
+            // Par jour
+            for ($i = 0; $i < $nb_jour; $i++) {
+                $reqJourTemp = $pdo->prepare("
+                    SELECT donne 
+                    FROM historique_donne H 
+                    JOIN type_capteur TC ON H.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'T' AND jour = :jour AND mois = :mois AND anne = :anne;
+                ");
+                $reqJourHumi = $pdo->prepare("
+                    SELECT donne 
+                    FROM historique_donne H 
+                    JOIN type_capteur TC ON H.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'H' AND jour = :jour AND mois = :mois AND anne = :anne;
+                ");
     
-                $list_graphi_temp[] = $graphi_temp[0];
-                $list_graphi_humi[] = $graphi_humi[0];
+                $params = ['jour' => $jour[$i], 'mois' => $_SESSION['mois_actuel'], 'anne' => $_SESSION['anne_actuel']];
+    
+                $reqJourTemp->execute($params);
+                $reqJourHumi->execute($params);
+    
+                $list_graphi_temp[] = $reqJourTemp->fetchColumn() ?? 0;
+                $list_graphi_humi[] = $reqJourHumi->fetchColumn() ?? 0;
             }
         } else {
-            for ($i = 0; $i < count($mois); $i++) {
-                $graphique_temp = $pdo->prepare("SELECT donne FROM historique_donne H JOIN type_capteur TC ON H.TYPE_CAPTEUR=TC.TYPE_CAPTEUR WHERE TC.TYPE_CAPTEUR='T' && mois=$mois[$i] && annee=$anne_actuel;");
-                $graphique_humi = $pdo->prepare("SELECT donne FROM historique_donne H JOIN type_capteur TC ON H.TYPE_CAPTEUR=TC.TYPE_CAPTEUR WHERE TC.TYPE_CAPTEUR='H' && mois=$mois[$i] && annee=$anne_actuel;");
-                $graphique_temp->execute();
-                $graphique_humi->execute();
-
-                $graphi_temp = $graphique_temp->fetch();
-                $graphi_humi = $graphique_humi->fetch();
-
-                $list_graphi_temp[] = $graphi_temp[0];
-                $list_graphi_humi[] = $graphi_humi[0];
+            // Moyennes mensuelles
+            for ($i = 0; $i < $nb_mois; $i++) {
+                $reqMoisTemp = $pdo->prepare("
+                    SELECT donne 
+                    FROM historique_donne H 
+                    JOIN type_capteur TC ON H.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'T' AND jour = 'M' AND mois = :mois AND anne = :anne;
+                ");
+                $reqMoisHumi = $pdo->prepare("
+                    SELECT donne 
+                    FROM historique_donne H 
+                    JOIN type_capteur TC ON H.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'H' AND jour = 'M' AND mois = :mois AND anne = :anne;
+                ");
+    
+                $params = ['mois' => $mois[$i], 'anne' => $_SESSION['anne_actuel']];
+    
+                $reqMoisTemp->execute($params);
+                $reqMoisHumi->execute($params);
+    
+                $list_graphi_temp[] = $reqMoisTemp->fetchColumn() ?? 0;
+                $list_graphi_humi[] = $reqMoisHumi->fetchColumn() ?? 0;
             }
-        } 
+        }
+    
     } catch (PDOException $e) {
-        die("Erreur : " . $e->getMessage());
-    }
+        die("Erreur PDO : " . $e->getMessage());
+    }    
     ?>
     <form method="post">
         <header>
@@ -114,11 +159,9 @@
                 <canvas id="graphique-temp-humi" width="1000" height="500"></canvas>
                 <div id="bouton-graphique">
                     <input type="submit" class="choix-graphique" name="mois" value="par mois"></input>
-                    <input type="text" class="choix-valeur" name="annee_choix" placeholder="année"></input>
+                    <input type="text" class="choix-valeur" name="anne_choix" placeholder=<?php echo $anne_actuel; ?>></input>
                     <input type="submit" class="choix-graphique" name="jour" value="par jour"></input>
-                    <input type="text" class="choix-valeur" name="mois_choix" placeholder="mois"></input>
-                    <input type="submit" class="choix-graphique" name="heure" value="par heure"></input>
-                    <input type="text" class="choix-valeur" name="jour_choix" placeholder="jour"></input>
+                    <input type="text" class="choix-valeur" name="mois_choix" placeholder=<?php echo $mois_actuel; ?>></input>
                 </div>
             </div>    
         </main>
@@ -129,16 +172,14 @@
         let list_graphi_humi = <?php echo json_encode($list_graphi_humi); ?>;
         let taille_list = list_graphi_temp.length;
         let Labels = [];
-        if (taille_list == 24) {
-            Labels = ["0h","1h","2h","3h","4h","5h","6h","7h","8h","9h","10h","11h","12h","13h","14h","15h","16h","17h","18h","19h","20h","21h","22h","23h"];
-        } else if (taille_list == 31) {
-            Labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+        if (taille_list == 31) {
+            Labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
         } else if (taille_list == 30) {
-            Labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
+            Labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
         } else if (taille_list == 28) {
-            Labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28];
+            Labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28];
         } else if (taille_list == 29) {
-            Labels = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
+            Labels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29];
         } else {
             Labels = ["Jan", "Fév", "Mar", "Avr", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc"];
         }

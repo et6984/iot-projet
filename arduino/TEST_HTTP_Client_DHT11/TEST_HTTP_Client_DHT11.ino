@@ -16,7 +16,7 @@ DHT dht(DHTPIN, DHTTYPE); // Déclaration du capteur
 
 // Adresse du serveur et fichier PHP
 String HOST_NAME = "http://172.20.10.4:80"; // Adresse IP de ton serveur
-String PHP_FILE_NAME = "/iot-projet/php/data_test.php"; // Nom du fichier PHP
+String PHP_FILE_NAME = "/iot-projet/data_test"; // Nom du fichier PHP
 
 void setup() {
   Serial.begin(115200);
@@ -29,6 +29,9 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(STASSID, STAPSK);
   
+  Serial.print("test wifi : ");
+  Serial.println(WiFi.status());
+
   Serial.print("Connexion au WiFi...");
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -68,6 +71,9 @@ void loop() {
     WiFiClient client;
     HTTPClient http;
     
+    Serial.print("client : ");
+    Serial.println(client);
+
     http.begin(client, server);  // Début de la requête HTTP
     http.setTimeout(5000); // Timeout de 5 secondes
 
