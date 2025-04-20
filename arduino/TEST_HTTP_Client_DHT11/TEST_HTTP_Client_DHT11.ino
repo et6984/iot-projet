@@ -15,8 +15,8 @@ DHT dht(DHTPIN, DHTTYPE); // Déclaration du capteur
 #endif
 
 // Adresse du serveur et fichier PHP
-String HOST_NAME = "http://172.20.10.4:80"; // Adresse IP de ton serveur
-String PHP_FILE_NAME = "/iot-projet/data_test"; // Nom du fichier PHP
+String HOST_NAME = "http://ip-server"; // Adresse IP de ton serveur
+String PHP_FILE_NAME = "/iot-projet/php/data_test.php"; // Nom du fichier PHP
 
 void setup() {
   Serial.begin(115200);
