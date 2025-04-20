@@ -11,8 +11,7 @@
 <body>
     <?php
     date_default_timezone_set('Europe/Paris');
-    $mois = ['01','02','03','04','05','06','07','08','09','10','11','12'];
-    $nb_mois = count($mois);
+    $nb_mois = 12;
 
     if (isset($_POST['mois']) && !empty($_POST['anne_choix']) && empty($_POST['mois_choix']) && empty($_POST['jour_choix'])) {
         $_SESSION['anne_actuel'] = $_POST['anne_choix'];
@@ -24,11 +23,11 @@
         $_SESSION['jour_actuel'] = date('d');
 
     } elseif (isset($_POST['jour']) && empty($_POST['anne_choix']) && !empty($_POST['mois_choix'])) {
-        $_SESSION['anne_actuel'] = date('y');
+        $_SESSION['anne_actuel'] = date('Y');
         $_SESSION['mois_actuel'] = $_POST['mois_choix'];
         $_SESSION['jour_actuel'] = date('d');
     }else {    
-        $_SESSION['anne_actuel'] = date('y');
+        $_SESSION['anne_actuel'] = date('Y');
         $_SESSION['mois_actuel'] = date('m');
         $_SESSION['jour_actuel'] = date('d'); 
     }
@@ -39,17 +38,13 @@
 
     if ($_SESSION['mois_actuel'] == '1' || $_SESSION['mois_actuel'] == '3' || $_SESSION['mois_actuel'] == '5' || $_SESSION['mois_actuel'] == '7' || $_SESSION['mois_actuel'] == '8' || $_SESSION['mois_actuel'] == '10' || $_SESSION['mois_actuel'] == '12') {
         $nb_jour = 31;
-        $jour = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30','31'];
     } elseif ($_SESSION['mois_actuel'] == '4' || $_SESSION['mois_actuel'] == '6' || $_SESSION['mois_actuel'] == '9' || $_SESSION['mois_actuel'] == '11') {
         $nb_jour = 30;
-        $jour = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29','30'];
     } else {
         if ($_SESSION['anne_actuel'] % 4 == 0 && ($_SESSION['anne_actuel'] % 100 != 0 || $_SESSION['anne_actuel'] % 400 == 0)) {
             $nb_jour = 29;
-            $jour = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28','29'];
         } else {
             $nb_jour = 28;
-            $jour = ['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16','17','18','19','20','21','22','23','24','25','26','27','28'];
         }
     }
 
@@ -88,51 +83,80 @@
     
         if (isset($_POST['jour'])) {
             // Par jour
-            for ($i = 0; $i < $nb_jour; $i++) {
+            for ($i = 1; $i <= $nb_jour; $i++) {
                 $reqJourTemp = $pdo->prepare("
-                    SELECT donne 
-                    FROM historique_donne H 
-                    JOIN type_capteur TC ON H.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-                    WHERE TC.TYPE_CAPTEUR = 'T' AND jour = :jour AND mois = :mois AND anne = :anne;
+                    SELECT AVG(MESURE)
+                    AS moyenne_mesure
+                    FROM capteur C 
+                    JOIN type_capteur TC 
+                    ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'T' 
+                    AND jour = :jour
+                    AND mois = :mois
+                    AND anne = :anne;
                 ");
                 $reqJourHumi = $pdo->prepare("
-                    SELECT donne 
-                    FROM historique_donne H 
-                    JOIN type_capteur TC ON H.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-                    WHERE TC.TYPE_CAPTEUR = 'H' AND jour = :jour AND mois = :mois AND anne = :anne;
+                    SELECT AVG(MESURE)
+                    AS moyenne_mesure
+                    FROM capteur C 
+                    JOIN type_capteur TC 
+                    ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'H' 
+                    AND jour = :jour
+                    AND mois = :mois
+                    AND anne = :anne;
                 ");
     
-                $params = ['jour' => $jour[$i], 'mois' => $_SESSION['mois_actuel'], 'anne' => $_SESSION['anne_actuel']];
+                $params = ['jour' => $i, 'mois' => $_SESSION['mois_actuel'], 'anne' => $_SESSION['anne_actuel']];
     
                 $reqJourTemp->execute($params);
                 $reqJourHumi->execute($params);
-    
-                $list_graphi_temp[] = $reqJourTemp->fetchColumn() ?? 0;
-                $list_graphi_humi[] = $reqJourHumi->fetchColumn() ?? 0;
+
+                if ($reqJourTemp->rowCount() == 0) {
+                } else {
+                    $list_graphi_temp[] = $reqJourTemp->fetchColumn();
+                }
+
+                if ($reqJourHumi->rowCount() == 0) {
+                } else {
+                    $list_graphi_humi[] = $reqJourHumi->fetchColumn();
+                }
             }
         } else {
             // Moyennes mensuelles
-            for ($i = 0; $i < $nb_mois; $i++) {
+            for ($i = 1; $i <= $nb_mois; $i++) {
                 $reqMoisTemp = $pdo->prepare("
-                    SELECT donne 
-                    FROM historique_donne H 
-                    JOIN type_capteur TC ON H.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-                    WHERE TC.TYPE_CAPTEUR = 'T' AND jour = 'M' AND mois = :mois AND anne = :anne;
+                    SELECT AVG(MESURE) 
+                    AS moyenne_mesure
+                    FROM capteur C 
+                    JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'T' 
+                    AND mois = :mois 
+                    AND anne = :anne;
                 ");
                 $reqMoisHumi = $pdo->prepare("
-                    SELECT donne 
-                    FROM historique_donne H 
-                    JOIN type_capteur TC ON H.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-                    WHERE TC.TYPE_CAPTEUR = 'H' AND jour = 'M' AND mois = :mois AND anne = :anne;
+                    SELECT AVG(MESURE) 
+                    AS moyenne_mesure
+                    FROM capteur C 
+                    JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'H' 
+                    AND mois = :mois 
+                    AND anne = :anne;
                 ");
     
-                $params = ['mois' => $mois[$i], 'anne' => $_SESSION['anne_actuel']];
+                $params = ['mois' => $i, 'anne' => $_SESSION['anne_actuel']];
     
                 $reqMoisTemp->execute($params);
                 $reqMoisHumi->execute($params);
     
-                $list_graphi_temp[] = $reqMoisTemp->fetchColumn() ?? 0;
-                $list_graphi_humi[] = $reqMoisHumi->fetchColumn() ?? 0;
+                if ($reqMoisTemp->rowCount() == 0) {
+                } else {
+                    $list_graphi_temp[] = $reqMoisTemp->fetchColumn();
+                }
+                if ($reqMoisHumi->rowCount() == 0) {
+                } else {
+                    $list_graphi_humi[] = $reqMoisHumi->fetchColumn();
+                }
             }
         }
     
