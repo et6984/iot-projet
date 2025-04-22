@@ -18,7 +18,12 @@ try {
     $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $password);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $stmt = $pdo->prepare("INSERT INTO `capteur`(`TYPE_CAPTEUR`, `MESURE`, `ANNE`, `MOIS`, `JOUR`, `HEURE`) VALUES ('T', :temp, :annee, :mois, :jour, :heure),('H', :humi, :annee, :mois, :jour, :heure)");
+    $stmt = $pdo->prepare("
+        INSERT INTO `capteur`(`TYPE_CAPTEUR`, `MESURE`, `ANNE`, `MOIS`, `JOUR`, `HEURE`) 
+        VALUES 
+        ('T', :temp, :annee, :mois, :jour, :heure),
+        ('H', :humi, :annee, :mois, :jour, :heure)
+    ");
     $stmt->bindParam(':temp', $temp, PDO::PARAM_STR);
     $stmt->bindParam(':humi', $humi, PDO::PARAM_STR);
     $stmt->bindParam(':jour', $jour, PDO::PARAM_STR);
