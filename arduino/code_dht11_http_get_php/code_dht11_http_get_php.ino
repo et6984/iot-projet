@@ -7,7 +7,7 @@
 DHT dht(DHTPIN, DHTTYPE);
 
 const char* ssid     = "ET";
-const char* password = "Funipops/051122";
+const char* password = "mot_de_passe";
  
 const char* host = "172.20.10.5";
  
@@ -78,5 +78,5 @@ void loop() {
   
   Serial.println();
   Serial.println("closing connection");
-  delay(10000);
+  delay(60000);
 }
