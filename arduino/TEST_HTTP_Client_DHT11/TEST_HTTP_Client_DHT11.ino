@@ -10,13 +10,13 @@ DHT dht(DHTPIN, DHTTYPE); // Déclaration du capteur
 
 // Identifiants WiFi
 #ifndef STASSID
-#define STASSID "ET"
-#define STAPSK "Funipops/051122"
+#define STASSID "Cappec-Etudiants"
+#define STAPSK "0320880304"
 #endif
 
 // Adresse du serveur et fichier PHP
-String HOST_NAME = "http://172.20.10.4:80"; // Adresse IP de ton serveur
-String PHP_FILE_NAME = "/iot-projet/data_test"; // Nom du fichier PHP
+String HOST_NAME = "http://192.168.3.216:8888"; // Adresse IP de ton serveur
+String PHP_FILE_NAME = "/iot-projet/php/data_test.php"; // Nom du fichier PHP
 
 void setup() {
   Serial.begin(115200);
@@ -54,11 +54,11 @@ void loop() {
   } else {
     Serial.print("Température : ");
     Serial.print(temperature);
-    Serial.println("°C");
+    Serial.println(" °C");
 
     Serial.print("Humidité : ");
     Serial.print(humidity);
-    Serial.println("%");
+    Serial.println(" %");
 
     // Création de l'URL avec les valeurs de température et d'humidité
     String valeur = "?temp=" + String(temperature) + "&humi=" + String(humidity); 

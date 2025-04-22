@@ -50,7 +50,6 @@
                 } catch (PDOException $e) {
                     die("Erreur : " . $e->getMessage());
                 }
-                echo $row['PASSWORD_USER'];
                 if (password_verify($password, $row['PASSWORD_USER'])) {
                     $_SESSION['utilisateur'] = $nom . " " . $prenom[0];
                     header("Location: affichage.php");

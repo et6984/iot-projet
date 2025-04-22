@@ -1,10 +1,21 @@
 #include <ESP8266WiFi.h>
+#include "DHT.h"
 
+#define DHTPIN D6
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+const char* ssid     = "ET";
+const char* password = "Funipops/051122";
+ 
 const char* host = "172.20.10.5";
  
 void setup() {
   Serial.begin(115200);
   delay(100);
+
+  dht.begin();
 
   // We start by connecting to a WiFi network
  
@@ -29,6 +40,9 @@ void setup() {
 int value = 0;
  
 void loop() {
+  float humi = dht.readHumidity();
+  float temp = dht.readTemperature();
+
   delay(5000);
   ++value;
  
@@ -44,12 +58,14 @@ void loop() {
   }
   
   // We now create a URI for the request
+  String valeur = "?temp=" + String(temp) + "&humi=" + String(humi);
   String url = "/iot-projet/php/data_test.php";
+  String requete = url + valeur;
   Serial.print("Requesting URL: ");
-  Serial.println(url);
+  Serial.println(requete);
   
   // This will send the request to the server
-  client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+  client.print(String("GET ") + requete + " HTTP/1.1\r\n" +
                "Host: " + host + "\r\n" + 
                "Connection: close\r\n\r\n");
   delay(500);
