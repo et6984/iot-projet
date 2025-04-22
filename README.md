@@ -84,9 +84,11 @@ Pour résoudre se problème on utilisera un DHT11 et un ESP8266, tout cela en co
 **11. Mise en place de l'envoie des données du DHT11 à la base de donnée par l'ESP8266**
 
 - Code arduino :
+
     <img src="image/code_arduino_dht11_1.png" width="80%">
     <img src="image/code_arduino_dht11_2.png" width="80%">
 
 - Fichier d'envoie vers la basse de donnée : 
+
     <img src="image/code_data_test.png" width="80%">
 
