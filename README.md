@@ -1,5 +1,5 @@
-NOM : DEHONDT / ESSAN
-Prénom : Gabin / Ange
+NOM : DEHONDT
+Prénom : Gabin
 Classe : B1 CIEL IR
 
 <h2 style="texte-align:center">Mise en œuvre du MQTT avec un ESP8266</h2>
