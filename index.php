@@ -17,7 +17,7 @@
                 <input type="text" class="name" name="prenom" placeholder="prénom"></input>
                 <input type="password" class="name" name="password" placeholder="mot de passe"></input>
                 <select name="salle" class="name">
-                    <option value="">--salle--</option>
+                    <option value="">-salle-</option>
                     <option value="serveur">serveur</option>
                     <option value="maintenance">maintenance</option>
                 </select>

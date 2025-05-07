@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css?version=<?= file_exists('css/style.css') ? filemtime('css/style.css') : time(); ?>">
-    <title>Salle des Serveurs</title>
+    <title>Tableau de Bord - administrateur</title>
     <script src="js/script.js?version=<?= file_exists('js/script.js') ? filemtime('js/script.js') : time(); ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
 </head> 
@@ -23,6 +23,8 @@
     } 
     date_default_timezone_set('Europe/Paris');
     $nb_mois = 12;
+
+    $list_mois = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
 
     // Initialisation des variables pour les graphiques (jour et mois)
     // en fonction de la date actuelle ou de la date choisie par l'utilisateur 
@@ -55,13 +57,17 @@
 
     if ($_SESSION['mois_actuel'] == '1' || $_SESSION['mois_actuel'] == '3' || $_SESSION['mois_actuel'] == '5' || $_SESSION['mois_actuel'] == '7' || $_SESSION['mois_actuel'] == '8' || $_SESSION['mois_actuel'] == '10' || $_SESSION['mois_actuel'] == '12') {
         $nb_jour = 31;
+        $list_jour = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'];
     } elseif ($_SESSION['mois_actuel'] == '4' || $_SESSION['mois_actuel'] == '6' || $_SESSION['mois_actuel'] == '9' || $_SESSION['mois_actuel'] == '11') {
         $nb_jour = 30;
+        $list_jour = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'];
     } else {
         if ($_SESSION['anne_actuel'] % 4 == 0 && ($_SESSION['anne_actuel'] % 100 != 0 || $_SESSION['anne_actuel'] % 400 == 0)) {
             $nb_jour = 29;
+            $list_jour = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29'];
         } else {
             $nb_jour = 28;
+            $list_jour = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28'];
         }
     }
 
@@ -106,31 +112,25 @@
 
         if (isset($_POST['jour'])) {
             // Par jour
-            for ($i = 1; $i <= $nb_jour; $i++) {
+            for ($i = 0; $i < $nb_jour; $i++) {
                 $reqJourTemp = $pdo->prepare("
-                    SELECT AVG(MESURE)
+                    SELECT AVG(MESURE) 
                     AS moyenne_mesure
                     FROM capteur C 
-                    JOIN type_capteur TC 
-                    ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-                    WHERE TC.TYPE_CAPTEUR = 'T' 
-                    AND jour = :jour
-                    AND mois = :mois
-                    AND anne = :anne;
+                    JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'T'   
+                    AND DATE_FORMAT(DATE_HEURE, '%Y%m%d') = :date;
                 ");
                 $reqJourHumi = $pdo->prepare("
-                    SELECT AVG(MESURE)
+                    SELECT AVG(MESURE) 
                     AS moyenne_mesure
                     FROM capteur C 
-                    JOIN type_capteur TC 
-                    ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-                    WHERE TC.TYPE_CAPTEUR = 'H' 
-                    AND jour = :jour
-                    AND mois = :mois
-                    AND anne = :anne;
+                    JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
+                    WHERE TC.TYPE_CAPTEUR = 'H'   
+                    AND DATE_FORMAT(DATE_HEURE, '%Y%m%d') = :date;
                 ");
     
-                $params = ['jour' => $i, 'mois' => $_SESSION['mois_actuel'], 'anne' => $_SESSION['anne_actuel']];
+                $params = ['date' => $_SESSION['anne_actuel'] . $_SESSION['mois_actuel'] . $list_jour[$i]];
     
                 $reqJourTemp->execute($params);
                 $reqJourHumi->execute($params);
@@ -147,27 +147,25 @@
             }
         } else {
             // Moyennes mensuelles
-            for ($i = 1; $i <= $nb_mois; $i++) {
+            for ($i = 0; $i < $nb_mois; $i++) {
                 $reqMoisTemp = $pdo->prepare("
                     SELECT AVG(MESURE) 
                     AS moyenne_mesure
                     FROM capteur C 
                     JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-                    WHERE TC.TYPE_CAPTEUR = 'T' 
-                    AND mois = :mois 
-                    AND anne = :anne;
+                    WHERE TC.TYPE_CAPTEUR = 'T'   
+                    AND DATE_FORMAT(DATE_HEURE, '%Y%m') = :date;
                 ");
                 $reqMoisHumi = $pdo->prepare("
                     SELECT AVG(MESURE) 
                     AS moyenne_mesure
                     FROM capteur C 
                     JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-                    WHERE TC.TYPE_CAPTEUR = 'H' 
-                    AND mois = :mois 
-                    AND anne = :anne;
+                    WHERE TC.TYPE_CAPTEUR = 'H'   
+                    AND DATE_FORMAT(DATE_HEURE, '%Y%m') = :date;
                 ");
     
-                $params = ['mois' => $i, 'anne' => $_SESSION['anne_actuel']];
+                $params = ['date' => $_SESSION['anne_actuel'] . $list_mois[$i]];
     
                 $reqMoisTemp->execute($params);
                 $reqMoisHumi->execute($params);
@@ -202,7 +200,7 @@
                 <input type="submit" class="bouton-menu" name="inscription" value="INSCRIPTION"></input>
                 <?php if (isset($_POST['inscription'])){ header("Location: inscription.php");exit();} ?>
                 <select name="salle" class="bouton-menu" id="salle">
-                    <option value=""><?php echo $_SESSION['salle']; ?></option>
+                    <option value=""><?php echo '-'.$_SESSION['salle'].'-'; ?></option>
                     <option value="serveur">serveur</option>    
                     <option value="maintenance">maintenance</option>
                     <?php
@@ -230,7 +228,7 @@
                 } 
                 ?>
             </div>
-            <h1>Salle <?php echo $_SESSION['salle'] . " : " . $_SESSION['utilisateur'] . " " .  $_SESSION['type'];?></h1>
+            <h1>Salle <?php echo $_SESSION['salle'] . " : " . $_SESSION['utilisateur'] . " / " .  $_SESSION['type'];?></h1>
         </header>
         <main id="affichage">   
             <!-- organisation des jauges taille et emplacement dans le page -->
