@@ -11,27 +11,32 @@
     <form method="POST" id="connexion">
         <div class="accueil">
             <h2>Connexion - Salle des Serveurs</h2>
+            <!-- ensemble des balise du fomulaire -->
             <div class="info">
                 <input type="text" class="name" name="nom" placeholder="nom"></input>
                 <input type="text" class="name" name="prenom" placeholder="prénom"></input>
                 <input type="password" class="name" name="password" placeholder="mot de passe"></input>
+                <select name="salle" class="name">
+                    <option value="">--salle--</option>
+                    <option value="serveur">serveur</option>
+                    <option value="maintenance">maintenance</option>
+                </select>
             </div>
             <div class="options">
                 <input type="submit" class="changement" name="start" value="Connexion"></input>
-                <input type="submit" class="changement" name="creation" value="Inscription"></input>
             </div>
             <?php
             session_start();
+
+            // information de la base de donnée
 
             $host = "localhost";
             $db = "salle_serveur";
             $user = "capteur";
             $pass = "password";
 
-            if (isset($_POST['creation'])){
-                header("Location: inscription.php");
-                exit();
-            }
+            // vérification de l'utilisateur dans la base de donnée avec les champs nom, prénom et mot de passe
+
             if (isset($_POST['start']) && !empty($_POST['nom']) && !empty($_POST['prenom']) && !empty($_POST['password'])) {
                 $nom = trim(htmlspecialchars($_POST['nom']));
                 $prenom = trim(htmlspecialchars($_POST['prenom']));
@@ -50,10 +55,22 @@
                 } catch (PDOException $e) {
                     die("Erreur : " . $e->getMessage());
                 }
-                if (password_verify($password, $row['PASSWORD_USER'])) {
+
+                // vérification du mot de passe avec la fonction password_verify
+                // si le mot de passe est correct, on redirige vers la page affichage.php
+
+                if (password_verify($password, $row['PASSWORD_USER']) && $row['TYPE_USER'] == 'A') {
+                    $_SESSION['salle'] = $_POST['salle'];
                     $_SESSION['utilisateur'] = $nom . " " . $prenom[0];
-                    header("Location: affichage.php");
-                exit();
+                    $_SESSION['type'] = $row['TYPE_USER'];
+                    header("Location: affichage_admin.php");
+                    exit();
+                } elseif (password_verify($password, $row['PASSWORD_USER']) && $row['TYPE_USER'] == 'S') {
+                    $_SESSION['salle'] = $_POST['salle'];
+                    $_SESSION['utilisateur'] = $nom . " " . $prenom[0];
+                    $_SESSION['type'] = $row['TYPE_USER'];
+                    header("Location: affichage_user.php");
+                    exit();
                 } else {
                     echo "<p class='erreur'>Nom d'utilisateur ou mot de passe incorrect</p>";
                 }

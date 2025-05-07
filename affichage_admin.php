@@ -10,8 +10,23 @@
 </head> 
 <body>
     <?php
+    session_start();
+
+    if (!isset($_SESSION['utilisateur'])) {
+        echo "Accès refusé. Veuillez vous connecter.";
+        echo "<a href='index.php'>Retour</a>";
+        exit();
+    } elseif ($_SESSION['type'] != 'A') {
+        echo "Accès refusé. Vous n'êtes pas administrateur.";
+        echo "<a href='index.php'>Retour</a>";
+        exit();
+    } 
     date_default_timezone_set('Europe/Paris');
     $nb_mois = 12;
+
+    // Initialisation des variables pour les graphiques (jour et mois)
+    // en fonction de la date actuelle ou de la date choisie par l'utilisateur 
+    // ansi que le format du grphique (par jour ou par mois)
 
     if (isset($_POST['mois']) && !empty($_POST['anne_choix']) && empty($_POST['mois_choix']) && empty($_POST['jour_choix'])) {
         $_SESSION['anne_actuel'] = $_POST['anne_choix'];
@@ -36,6 +51,8 @@
     $mois_actuel = $_SESSION['mois_actuel'];
     $anne_actuel = $_SESSION['anne_actuel'];
 
+    // definition du nombre de jour en fonction du mois et de l'année
+
     if ($_SESSION['mois_actuel'] == '1' || $_SESSION['mois_actuel'] == '3' || $_SESSION['mois_actuel'] == '5' || $_SESSION['mois_actuel'] == '7' || $_SESSION['mois_actuel'] == '8' || $_SESSION['mois_actuel'] == '10' || $_SESSION['mois_actuel'] == '12') {
         $nb_jour = 31;
     } elseif ($_SESSION['mois_actuel'] == '4' || $_SESSION['mois_actuel'] == '6' || $_SESSION['mois_actuel'] == '9' || $_SESSION['mois_actuel'] == '11') {
@@ -48,16 +65,20 @@
         }
     }
 
+    // information de la base de donnée
+
     $host = "localhost";
     $db = "salle_serveur";
     $user = "capteur";
     $pass = "password";
 
+    // Recuperation des données de la base de donnée pour les graphiques et les jauges
+
     try {
         $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     
-        // Température et humidité actuelles
+        // Température et humidité actuelles pour les jauges
         $reqTemp = $pdo->prepare("
             SELECT MESURE 
             FROM capteur C 
@@ -81,6 +102,8 @@
         $temp = $reqTemp->fetchColumn() ?? 0;
         $humi = $reqHumi->fetchColumn() ?? 0;
     
+        // Graphiques
+
         if (isset($_POST['jour'])) {
             // Par jour
             for ($i = 1; $i <= $nb_jour; $i++) {
@@ -165,12 +188,52 @@
     }    
     ?>
     <form method="post">
+        <!-- en-tête : utilisateur et bouton de déconnexion -->
         <header>
-            <input type="submit" id="bouton" name="deconnexion" value="DECONNEXION"></input>
-            <?php if (isset($_POST['deconnexion'])){ header("Location: index.php");exit();} ?>
-            <h1>Salle des Serveurs : <?php session_start(); echo $_SESSION['utilisateur'];?></h1>
+            <div class="menu">
+                <input type="submit" class="bouton-menu" name="deconnexion" value="DECONNEXION"></input>
+                <?php 
+                if (isset($_POST['deconnexion'])) { 
+                    session_destroy();
+                    header("Location: index.php");
+                    exit();
+                    } 
+                ?>
+                <input type="submit" class="bouton-menu" name="inscription" value="INSCRIPTION"></input>
+                <?php if (isset($_POST['inscription'])){ header("Location: inscription.php");exit();} ?>
+                <select name="salle" class="bouton-menu" id="salle">
+                    <option value=""><?php echo $_SESSION['salle']; ?></option>
+                    <option value="serveur">serveur</option>    
+                    <option value="maintenance">maintenance</option>
+                    <?php
+                    $host = "localhost";
+                    $db = "salle_serveur";
+                    $user = "capteur";
+                    $pass = "password";
+                
+                    // Recuperation des données de la base de donnée pour les graphiques et les jauges
+                
+                    try {
+                        $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+                        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                    } catch (PDOException $e) {
+                        die("Erreur PDO : " . $e->getMessage());
+                    }
+                    ?>
+                </select>
+                <input type="submit" class="bouton-menu" name="choix_salle" value="OK"></input>
+                <?php 
+                if (isset($_POST['choix_salle']) && $_POST['salle'] != '') { 
+                    $_SESSION['salle'] = $_POST['salle'];
+                    header("Location: affichage_admin.php");
+                    exit();
+                } 
+                ?>
+            </div>
+            <h1>Salle <?php echo $_SESSION['salle'] . " : " . $_SESSION['utilisateur'] . " " .  $_SESSION['type'];?></h1>
         </header>
-        <main id="affichage">
+        <main id="affichage">   
+            <!-- organisation des jauges taille et emplacement dans le page -->
             <div id="div-valeur">
                 <div class="valeur">
                     <canvas id="jauge-temp" width="275" height="275"></canvas>
@@ -179,6 +242,7 @@
                     <canvas id="jauge-humi" width="275" height="275"></canvas>
                 </div>
             </div>
+            <!-- organisation du graphique taille et emplacement dans le page -->
             <div id="div-graphique">
                 <canvas id="graphique-temp-humi" width="1000" height="500"></canvas>
                 <div id="bouton-graphique">
@@ -191,6 +255,8 @@
         </main>
     </form>
     <script>
+    // DOM pour le graphique (données et affichage)
+    // Utilisation de Chart.js pour créer un graphique linéaire
     document.addEventListener("DOMContentLoaded", function () {
         let list_graphi_temp = <?php echo json_encode($list_graphi_temp); ?>;
         let list_graphi_humi = <?php echo json_encode($list_graphi_humi); ?>;
@@ -262,6 +328,8 @@
             }
         });
     });
+    // DOM pour les jauges (données et affichage)
+    // Utilisation de Chart.js pour créer des jauges circulaires
     document.addEventListener("DOMContentLoaded", function () {
         let temperature = <?php echo json_encode($temp); ?>;
         let humidity = <?php echo json_encode($humi); ?>;

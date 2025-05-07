@@ -69,6 +69,10 @@ Pour résoudre se problème on utilisera un DHT11 et un ESP8266, tout cela en co
     - Création d'un utilisateur avec nom, prénom, mot de passe hasher en argon2.
     <br>
 
+    Explication : 
+
+        
+
 - Connexion : 
 
     <img src="image/page_connexion.png" width="80%">
