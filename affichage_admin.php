@@ -14,11 +14,11 @@
 
     if (!isset($_SESSION['utilisateur'])) {
         echo "Accès refusé. Veuillez vous connecter.";
-        echo "<a href='index.php'>Retour</a>";
+        echo "<a href='connexion.php'>Retour</a>";
         exit();
     } elseif ($_SESSION['type'] != 'A') {
         echo "Accès refusé. Vous n'êtes pas administrateur.";
-        echo "<a href='index.php'>Retour</a>";
+        echo "<a href='connexion.php'>Retour</a>";
         exit();
     } 
     date_default_timezone_set('Europe/Paris');
@@ -193,7 +193,7 @@
                 <?php 
                 if (isset($_POST['deconnexion'])) { 
                     session_destroy();
-                    header("Location: index.php");
+                    header("Location: connexion.php");
                     exit();
                     } 
                 ?>

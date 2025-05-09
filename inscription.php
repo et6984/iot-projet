@@ -7,6 +7,19 @@
     <link rel="stylesheet" type="text/css" href="css/style.css?version=<?php echo filemtime('css/style.css');?>">
 </head>
 <body>
+    <?php
+    session_start();
+
+    if (!isset($_SESSION['utilisateur'])) {
+        echo "Accès refusé. Veuillez vous connecter.";
+        echo "<a href='connexion.php'>Retour</a>";
+        exit();
+    } elseif ($_SESSION['type'] != 'A') {
+        echo "Accès refusé. Vous n'êtes pas administrateur.";
+        echo "<a href='connexion.php'>Retour</a>";
+        exit();
+    } 
+    ?>
     <form method="POST" id="inscription">
         <div class="accueil">
             <h2>Inscription - Salle des Serveurs</h2>
@@ -27,8 +40,7 @@
                 <input type="submit" class="changement" name="retour" value="Retour"></input>
             </div>
             <?php
-            session_start();
-            
+
             // fonctionement du bouton pour rediriger vers la page de connexion
 
             if (isset($_POST['retour'])){

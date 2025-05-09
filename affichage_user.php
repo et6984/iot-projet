@@ -14,11 +14,11 @@
 
     if (!isset($_SESSION['utilisateur'])) {
         echo "Accès refusé. Veuillez vous connecter.";
-        echo "<a href='index.php'>Retour</a>";
+        echo "<a href='connexion.php'>Retour</a>";
         exit();
     } elseif (($_SESSION['type'] != 'S')) {
         echo "Accès refusé. Vous n'êtes pas superviseur.";
-        echo "<a href='index.php'>Retour</a>";
+        echo "<a href='connexion.php'>Retour</a>";
         exit();
     }
 
@@ -194,7 +194,7 @@
                 <?php 
                 if (isset($_POST['deconnexion'])) { 
                     session_destroy();
-                    header("Location: index.php");
+                    header("Location: connexion.php");
                     exit();
                     } 
                 ?>

@@ -19,7 +19,7 @@
                 <select name="salle" class="name">
                     <option value="">-salle-</option>
                     <option value="serveur">serveur</option>
-                    <option value="maintenance">maintenance</option>
+                    <option value="ajout">ajouter salle</option>
                 </select>
             </div>
             <div class="options">
@@ -58,21 +58,34 @@
 
                 // vérification du mot de passe avec la fonction password_verify
                 // si le mot de passe est correct, on redirige vers la page affichage.php
-
-                if (password_verify($password, $row['PASSWORD_USER']) && $row['TYPE_USER'] == 'A') {
-                    $_SESSION['salle'] = $_POST['salle'];
-                    $_SESSION['utilisateur'] = $nom . " " . $prenom[0];
-                    $_SESSION['type'] = $row['TYPE_USER'];
-                    header("Location: affichage_admin.php");
-                    exit();
-                } elseif (password_verify($password, $row['PASSWORD_USER']) && $row['TYPE_USER'] == 'S') {
-                    $_SESSION['salle'] = $_POST['salle'];
-                    $_SESSION['utilisateur'] = $nom . " " . $prenom[0];
-                    $_SESSION['type'] = $row['TYPE_USER'];
-                    header("Location: affichage_user.php");
-                    exit();
+                if (!$row) {
+                    echo "<p class='erreur'>Utilisateur non reconnu</p>";
                 } else {
-                    echo "<p class='erreur'>Nom d'utilisateur ou mot de passe incorrect</p>";
+                    if ($_POST == "") {
+                        echo "<p class='erreur'>Il faut choisir une salle</p>";
+                    } elseif (password_verify($password, $row['PASSWORD_USER']) && $row['TYPE_USER'] == 'A' && $_POST['salle'] == "ajout") {
+                        $_SESSION['salle'] = $_POST['salle'];
+                        $_SESSION['utilisateur'] = $nom . " " . $prenom[0];
+                        $_SESSION['type'] = $row['TYPE_USER'];
+                        header("Location: ajout_salle.php");
+                        exit();
+                    } elseif (password_verify($password, $row['PASSWORD_USER']) && $row['TYPE_USER'] == 'S' && $_POST['salle'] = "ajout") {
+                        echo "<p class='erreur'>Accés non autoriser !</p>";
+                    } elseif (password_verify($password, $row['PASSWORD_USER']) && $row['TYPE_USER'] == 'S') {
+                        $_SESSION['salle'] = $_POST['salle'];
+                        $_SESSION['utilisateur'] = $nom . " " . $prenom[0];
+                        $_SESSION['type'] = $row['TYPE_USER'];
+                        header("Location: affichage_user.php");
+                        exit();
+                    } elseif (password_verify($password, $row['PASSWORD_USER']) && $row['TYPE_USER'] == 'A') {
+                        $_SESSION['salle'] = $_POST['salle'];
+                        $_SESSION['utilisateur'] = $nom . " " . $prenom[0];
+                        $_SESSION['type'] = $row['TYPE_USER'];
+                        header("Location: affichage_admin.php");
+                        exit();
+                    } else {
+                        echo "<p class='erreur'>Nom d'utilisateur ou mot de passe incorrect</p>";
+                    }
                 }
             }
             ?>
