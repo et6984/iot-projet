@@ -11,7 +11,7 @@ const char* ssid     = "ET";
 const char* password = "mot_de_passe";
 
 // Remplace par le nom de domaine si tu utilises un certificat valide
-const char* host = "exemple.com"; // ou l'IP si configuré avec un certificat
+const char* host = "iot-projet.local"; // ou l'IP si configuré avec un certificat
 const int httpsPort = 443;
 
 // Pour ignorer la vérification SSL (PAS SÉCURISÉ EN PROD)

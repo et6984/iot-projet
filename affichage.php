@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css?version=<?= file_exists('css/style.css') ? filemtime('css/style.css') : time(); ?>">
-    <title>Tableau de Bord - superviseur</title>
+    <title>Tableau de Bord</title>
     <script src="js/script.js?version=<?= file_exists('js/script.js') ? filemtime('js/script.js') : time(); ?>"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
 </head> 
@@ -12,16 +12,18 @@
     <?php
     session_start();
 
+    // information de la base de donnée
+
+    $host = "localhost";
+    $db = "projet-iot";
+    $user = "capteur";
+    $pass = "password";
+
     if (!isset($_SESSION['utilisateur'])) {
         echo "Accès refusé. Veuillez vous connecter.";
-        echo "<a href='connexion.php'>Retour</a>";
-        exit();
-    } elseif (($_SESSION['type'] != 'S')) {
-        echo "Accès refusé. Vous n'êtes pas superviseur.";
-        echo "<a href='connexion.php'>Retour</a>";
+        echo "<a href='index.php'>Retour</a>";
         exit();
     }
-
     date_default_timezone_set('Europe/Paris');
     $nb_mois = 12;
 
@@ -71,16 +73,105 @@
             $list_jour = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28'];
         }
     }
+    ?>
+    <form method="post">
+        <!-- en-tête : utilisateur et bouton de déconnexion -->
+        <header>
+            <div class="menu">
+                <input type="submit" class="bouton-menu" name="deconnexion" value="DECONNEXION"></input>
+                <?php 
+                if (isset($_POST['deconnexion'])) { 
+                    session_destroy();
+                    header("Location: index.php");
+                    exit();
+                    } 
+                if ($_SESSION['type'] == 'A') {
+                    echo "<input type='submit' class='bouton-menu' name='inscription' value='INSCRIPTION'></input>";
+                    if (isset($_POST['inscription'])) { 
+                        header("Location: inscription.php");
+                        exit();
+                    } 
+                }
+                ?>
+                <select name="salle" class="bouton-menu" id="salle">
+                    <option value="">-choix-</option>
+                    <?php
+                    // afficher les salles dans le select
 
-    // information de la base de donnée
+                    if ($_SESSION['departement'] == 'G') {
+                        try {
+                            $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+                            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    $host = "localhost";
-    $db = "salle_serveur";
-    $user = "capteur";
-    $pass = "password";
+                            $stmt = $pdo->prepare("SELECT * FROM salle ORDER BY TYPE_SALLE ASC;");
+                            $stmt->execute();
+
+                            $row = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                            foreach ($row as $row1) {
+                                // afficher les salles dans le select
+                                echo "<option value=" . $row1['ID_SALLE'] . ">" . $row1['TYPE_SALLE'] . "-" . $row1['NOM_SALLE'] . "-" . $row1['ID_NOM_DEPARTEMENT'] . "</option>";
+                            }
+                        } catch (PDOException $e) {
+                            die("Erreur : " . $e->getMessage());
+                        }
+                    } else {
+                        // on recupere le nom de la salle
+                        $departement = $_SESSION['departement'];
+                        try {
+                            $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+                            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+                            $stmt = $pdo->prepare("SELECT * FROM salle WHERE ID_NOM_DEPARTEMENT = :departement  ORDER BY TYPE_SALLE ASC;");
+                            $stmt->bindParam(':departement', $departement, PDO::PARAM_STR);
+                            $stmt->execute();
+
+                            $row = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                            foreach ($row as $row1) {
+                                // afficher les salles dans le select
+                                echo "<option value=" . $row1['ID_SALLE'] . ">" . $row1['TYPE_SALLE'] . "-" . $row1['NOM_SALLE'] . "</option>";
+                            }
+                        } catch (PDOException $e) {
+                            echo "Erreur : " . $e->getMessage();
+                        }
+                    } 
+                    if ($_SESSION['type'] == 'A') {
+                        echo "<option value='ajout'>ajouter salle</option>";
+                    }
+                    ?>
+                </select>
+                <input type="submit" class="bouton-menu" name="choix_salle" value="OK"></input>
+                <?php
+                if (isset($_POST['choix_salle']) && $_POST['salle'] == 'ajout' ) { 
+                    header("Location: ajout_salle.php");
+                    exit();
+                } elseif (isset($_POST['choix_salle']) && $_POST['salle'] != '') {
+                    $salle = $_POST['salle'];
+                    try {
+                        $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+                        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+                        $stmt4 = $pdo->prepare("SELECT * FROM salle WHERE ID_SALLE = $salle;");
+                        $stmt4->execute();
+    
+                        $row4 = $stmt4->fetch();
+                    } catch (PDOException $e) {
+                        die("Erreur : " . $e->getMessage());
+                    }
+                    $_SESSION['salle'] = $row4['ID_NOM_DEPARTEMENT'] . "-" . $row4['NOM_SALLE'];
+                    $_SESSION['id_salle'] = $row4['ID_SALLE'];
+                    header("Location: affichage.php");
+                    exit();
+                } 
+                ?>
+            </div>
+            <h2>Salle <?php echo $_SESSION['salle'] . " : " . $_SESSION['utilisateur'] . " / " .  $_SESSION['type'];?></h2>
+        </header>
+    <?php
 
     // Recuperation des données de la base de donnée pour les graphiques et les jauges
-
+    $id_salle = $_SESSION['id_salle'];
     try {
         $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
@@ -90,7 +181,8 @@
             SELECT MESURE 
             FROM capteur C 
             JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-            WHERE TC.TYPE_CAPTEUR = 'T' 
+            WHERE TC.TYPE_CAPTEUR = 'T'
+            AND ID_SALLE = $id_salle 
             ORDER BY ID_CAPTEUR DESC 
             LIMIT 1;
         ");
@@ -98,7 +190,8 @@
             SELECT MESURE 
             FROM capteur C 
             JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
-            WHERE TC.TYPE_CAPTEUR = 'H' 
+            WHERE TC.TYPE_CAPTEUR = 'H'
+            AND ID_SALLE = $id_salle 
             ORDER BY ID_CAPTEUR DESC 
             LIMIT 1;
         ");
@@ -113,14 +206,15 @@
 
         if (isset($_POST['jour'])) {
             // Par jour
-            for ($i = 1; $i < $nb_jour; $i++) {
+            for ($i = 0; $i < $nb_jour; $i++) {
                 $reqJourTemp = $pdo->prepare("
                     SELECT AVG(MESURE) 
                     AS moyenne_mesure
                     FROM capteur C 
                     JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
                     WHERE TC.TYPE_CAPTEUR = 'T'   
-                    AND DATE_FORMAT(DATE_HEURE, '%Y%m%d') = :date;
+                    AND DATE_FORMAT(DATE_HEURE, '%Y%m%d') = :date 
+                    AND ID_SALLE = :salle;
                 ");
                 $reqJourHumi = $pdo->prepare("
                     SELECT AVG(MESURE) 
@@ -128,10 +222,11 @@
                     FROM capteur C 
                     JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
                     WHERE TC.TYPE_CAPTEUR = 'H'   
-                    AND DATE_FORMAT(DATE_HEURE, '%Y%m%d') = :date;
+                    AND DATE_FORMAT(DATE_HEURE, '%Y%m%d') = :date
+                    AND ID_SALLE = :salle;
                 ");
     
-                $params = ['date' => $_SESSION['anne_actuel'] . $_SESSION['mois_actuel'] . $list_jour[$i]];
+                $params = ['date' => $_SESSION['anne_actuel'] . $_SESSION['mois_actuel'] . $list_jour[$i], 'salle' => $_SESSION['id_salle']];
     
                 $reqJourTemp->execute($params);
                 $reqJourHumi->execute($params);
@@ -148,14 +243,15 @@
             }
         } else {
             // Moyennes mensuelles
-            for ($i = 1; $i < $nb_mois; $i++) {
+            for ($i = 0; $i < $nb_mois; $i++) {
                 $reqMoisTemp = $pdo->prepare("
                     SELECT AVG(MESURE) 
                     AS moyenne_mesure
                     FROM capteur C 
                     JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
                     WHERE TC.TYPE_CAPTEUR = 'T'   
-                    AND DATE_FORMAT(DATE_HEURE, '%Y%m') = :date;
+                    AND DATE_FORMAT(DATE_HEURE, '%Y%m') = :date
+                    AND ID_SALLE = :salle;
                 ");
                 $reqMoisHumi = $pdo->prepare("
                     SELECT AVG(MESURE) 
@@ -163,10 +259,11 @@
                     FROM capteur C 
                     JOIN type_capteur TC ON C.TYPE_CAPTEUR = TC.TYPE_CAPTEUR 
                     WHERE TC.TYPE_CAPTEUR = 'H'   
-                    AND DATE_FORMAT(DATE_HEURE, '%Y%m') = :date;
+                    AND DATE_FORMAT(DATE_HEURE, '%Y%m') = :date
+                    AND ID_SALLE = :salle;
                 ");
     
-                $params = ['date' => $_SESSION['anne_actuel'] . $list_mois[$i]];
+                $params = ['date' => $_SESSION['anne_actuel'] . $list_mois[$i], 'salle' => $_SESSION['id_salle']];
     
                 $reqMoisTemp->execute($params);
                 $reqMoisHumi->execute($params);
@@ -186,50 +283,6 @@
         die("Erreur PDO : " . $e->getMessage());
     }    
     ?>
-    <form method="post">
-        <!-- en-tête : utilisateur et bouton de déconnexion -->
-        <header>
-            <div class="menu">
-                <input type="submit" class="bouton-menu" name="deconnexion" value="DECONNEXION"></input>
-                <?php 
-                if (isset($_POST['deconnexion'])) { 
-                    session_destroy();
-                    header("Location: connexion.php");
-                    exit();
-                    } 
-                ?>
-                <select name="salle" class="bouton-menu" id="salle">
-                    <option value=""><?php echo "-".$_SESSION['salle']."-"; ?></option>
-                    <option value="serveur">serveur</option>
-                    <option value="maintenance">maintenance</option>
-                    <?php
-                    $host = "localhost";
-                    $db = "salle_serveur";
-                    $user = "capteur";
-                    $pass = "password";
-                
-                    // Recuperation des données de la base de donnée pour les graphiques et les jauges
-                
-                    try {
-                        $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
-                        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-                    } catch (PDOException $e) {
-                        die("Erreur PDO : " . $e->getMessage());
-                    }
-                    ?>
-                    </select>
-                <input type="submit" class="bouton-menu" name="choix_salle" value="OK"></input>
-                <?php 
-                if (isset($_POST['choix_salle']) && $_POST['salle'] != '') { 
-                    $_SESSION['salle'] = $_POST['salle'];
-                    header("Location: affichage_user.php");
-                    exit();
-                } 
-                ?>
-            </div>
-            <h1>Salle <?php echo $_SESSION['salle'] . " : " . $_SESSION['utilisateur'] . " / " .  $_SESSION['type'];?></h1>
-        </header>
         <main id="affichage">   
             <!-- organisation des jauges taille et emplacement dans le page -->
             <div id="div-valeur">
@@ -329,8 +382,8 @@
     // DOM pour les jauges (données et affichage)
     // Utilisation de Chart.js pour créer des jauges circulaires
     document.addEventListener("DOMContentLoaded", function () {
-        let temperature = <?php echo json_encode($temp); ?>;
-        let humidity = <?php echo json_encode($humi); ?>;
+        let temperature = <?php if ($temp == 0) { echo "null"; } else { echo json_encode($temp);}  ?>;
+        let humidity = <?php if ($humi == 0) { echo "null"; } else { echo json_encode($humi);} ?>;
         let maxTemp = 50;
         let maxHumi = 100;
 

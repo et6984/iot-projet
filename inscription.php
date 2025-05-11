@@ -12,11 +12,11 @@
 
     if (!isset($_SESSION['utilisateur'])) {
         echo "Accès refusé. Veuillez vous connecter.";
-        echo "<a href='connexion.php'>Retour</a>";
+        echo "<a href='index.php'>Retour</a>";
         exit();
     } elseif ($_SESSION['type'] != 'A') {
         echo "Accès refusé. Vous n'êtes pas administrateur.";
-        echo "<a href='connexion.php'>Retour</a>";
+        echo "<a href='index.php'>Retour</a>";
         exit();
     } 
     ?>
@@ -30,9 +30,53 @@
                 <input type="password" class="name" name="password" placeholder="mot de passe"></input>
                 <input type="password" class="name" name="re-password" placeholder="confirmer mot de passe"></input>
                 <select name="type" class="name">
-                    <option value="">--type d'utilisateur--</option>
-                    <option value="A">administateur</option>
-                    <option value="S">superviseur</option>
+                    <option value="">-type d'utilisateur-</option>
+                    <?php
+                    // information de la base de donnée
+
+                    $host = "localhost";
+                    $db = "projet-iot";
+                    $user = "capteur";
+                    $pass = "password";
+
+                    try {
+                        $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+                        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+                        $stmt1 = $pdo->prepare("SELECT * FROM type_user;");
+                        $stmt1->execute();
+    
+                        $row = $stmt1->fetchAll(PDO::FETCH_ASSOC);
+
+                        foreach ($row as $row1) {
+                            // afficher les salles dans le select
+                            echo "<option value=" . $row1['TYPE_USER'] . ">" . $row1['LIBELLE_TYPE_USER'] . "</option>";
+                        }
+                    } catch (PDOException $e) {
+                        die("Erreur : " . $e->getMessage());
+                    }
+                    ?>
+                </select>
+                <select name="departement" class="name">
+                    <option value="">-departement-</option>
+                    <?php
+                    try {
+                        $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
+                        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+                        $stmt = $pdo->prepare("SELECT * FROM departement;");
+                        $stmt->execute();
+    
+                        $row = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                        foreach ($row as $row1) {
+                            // afficher les departements dans le select
+                            echo "<option value=" . $row1['ID_NOM_DEPARTEMENT'] . ">" . $row1['NOM_DEPARTEMENT'] . "</option>";
+                        }
+                    } catch (PDOException $e) {
+                        die("Erreur : " . $e->getMessage());
+                    }
+                    ?>
                 </select>
             </div>
             <div class="options">
@@ -44,34 +88,30 @@
             // fonctionement du bouton pour rediriger vers la page de connexion
 
             if (isset($_POST['retour'])){
-                header("Location: affichage_admin.php");
+                header("Location: affichage.php");
                 exit();
             } 
-
-            // information de la base de donnée
-
-            $host = "localhost";
-            $db = "salle_serveur";
-            $user = "capteur";
-            $pass = "password";
 
             // création de l'utilisateur dans la base de donnée avec les champs nom, prénom et mot de passe
             // si le mot de passe et la confirmation du mot de passe sont identiques
 
-            if (isset($_POST['start']) && !empty($_POST['nom']) &&  !empty($_POST['prenom']) && !empty($_POST['password']) && !empty($_POST['re-password']) && !empty($_POST['type'])) {
+            if (isset($_POST['start']) && !empty($_POST['nom']) &&  !empty($_POST['prenom']) && !empty($_POST['password']) && !empty($_POST['re-password']) && !empty($_POST['type']) & !empty($_POST['departement'])) {
                 $nom = trim(htmlspecialchars($_POST['nom']));
                 $prenom = trim(htmlspecialchars($_POST['prenom']));
                 $password = trim(htmlspecialchars($_POST['password']));
                 $re_pass = trim(htmlspecialchars($_POST['re-password']));
                 $type = trim(htmlspecialchars($_POST['type']));
+                $departement = trim(htmlspecialchars($_POST['departement']));
 
                 if ($password != $re_pass) {
                     echo "<p>Les mots de passe ne correspondent pas</p>";
                     exit();
-                } else if ($type != 'A' && $type != 'S') {
+                } elseif ($type != 'A' && $type != 'S') {
                     echo "<p>Type d'utilisateur incorrect</p>";
                     exit();
                 }
+
+                $login = $prenom[0]. "." . $nom;
 
                 // inserrtion de l'utilisateur dans la base de donnée
 
@@ -81,7 +121,12 @@
 
                     $password_hashed= password_hash($password, PASSWORD_ARGON2I);
 
-                    $stmt = $pdo->prepare("INSERT INTO user (TYPE_USER, NOM_USER, PRENOM_USER, PASSWORD_USER) VALUES (:type ,:nom, :prenom, :pass)");
+                    $stmt = $pdo->prepare("
+                    INSERT INTO `user`(`TYPE_USER`, `ID_NOM_DEPARTEMENT`, `LOGIN_USER`, `NOM_USER`, `PRENOM_USER`, `PASSWORD_USER`) 
+                    VALUES (:type, :departement ,:login , :nom, :prenom, :pass);
+                    ");
+                    $stmt->bindParam(':login', $login, PDO::PARAM_STR);
+                    $stmt->bindParam(':departement', $departement, PDO::PARAM_STR);
                     $stmt->bindParam(':type', $type, PDO::PARAM_STR);
                     $stmt->bindParam(':prenom', $prenom, PDO::PARAM_STR);
                     $stmt->bindParam(':nom', $nom, PDO::PARAM_STR);

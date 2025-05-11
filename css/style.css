@@ -17,7 +17,7 @@ header img {
     width: 50px;
 }
 
-header h1 {
+header h2 {
     padding: 10px 20px;
 }
 
@@ -43,11 +43,11 @@ header h1 {
 }
 
 #div-valeur {
-    width: 50vh;
+    width: 28%;
 }
 
 #div-graphique {
-    width: 150vh;
+    width: 72%;
 }
 
 .choix-graphique {
@@ -110,3 +110,33 @@ header h1 {
     width: 10vw;
     margin: 2vh;   
 }
+
+#choix-salle {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+#boite-selection {
+    display: flex;
+    flex-direction: column;
+    margin: 5%;
+}
+
+.selection {
+    margin: 2px auto;
+    border-radius: 5px;
+    width: 50%;
+    height: auto;
+    margin-top: 5%;
+}
+
+.formulaire {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+    margin: 5%;
+}
+
