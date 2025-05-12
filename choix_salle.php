@@ -40,7 +40,7 @@
                             $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
                             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-                            $stmt = $pdo->prepare("SELECT * FROM salle;");
+                            $stmt = $pdo->prepare("SELECT * FROM salle ORDER BY ID_NOM_DEPARTEMENT ASC;");
                             $stmt->execute();
 
                             $row = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -59,7 +59,7 @@
                             $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
                             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-                            $stmt = $pdo->prepare("SELECT * FROM salle WHERE ID_NOM_DEPARTEMENT = :departement;");
+                            $stmt = $pdo->prepare("SELECT * FROM salle WHERE ID_NOM_DEPARTEMENT = :departement ORDER BY TYPE_SALLE ASC;");
                             $stmt->bindParam(':departement', $departement, PDO::PARAM_STR);
                             $stmt->execute();
 

@@ -103,7 +103,7 @@
                             $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
                             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-                            $stmt = $pdo->prepare("SELECT * FROM salle ORDER BY TYPE_SALLE ASC;");
+                            $stmt = $pdo->prepare("SELECT * FROM salle ORDER BY ID_NOM_DEPARTEMENT ASC;");
                             $stmt->execute();
 
                             $row = $stmt->fetchAll(PDO::FETCH_ASSOC);
